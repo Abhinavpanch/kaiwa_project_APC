@@ -36,7 +36,9 @@ document.getElementById('sendBtn').addEventListener('click', () => {
     if (!msg || !stompClient || !currentRoom) return;
     stompClient.send('/app/chat/' + currentRoom, {}, JSON.stringify({
         content: msg,
-        sender: 'me' // server will not override sender; in real app use principal name
+        sender: 'me'
     }));
     document.getElementById('message').value = '';
 });
+
+

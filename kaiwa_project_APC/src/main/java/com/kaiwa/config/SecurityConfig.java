@@ -13,7 +13,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF if using WebSocket; otherwise configure properly
+            .csrf(csrf -> csrf.disable()) // Disable CSRF if using WebSocket or use proper
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/register", "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
@@ -25,7 +25,7 @@ public class SecurityConfig {
             )
             .rememberMe(remember -> remember
                 .key("uniqueAndSecret")
-                .tokenValiditySeconds(7 * 24 * 60 * 60)                                      // 7 days tak
+                .tokenValiditySeconds(7 * 24 * 60 * 60)                                    // 7 days tak
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")

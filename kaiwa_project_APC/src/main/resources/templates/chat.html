@@ -1,64 +1,179 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Chat Room</title>
+    <title>Kaiwa Chat</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
-<h2>Welcome to the Chat Room First By the admin abhinav</h2>
 
-<div>
-    <label for="room">Room ID:General</label>
-    <input type="text" id="room" value="general">
-    <button onclick="connect()">Join</button>
+<div class="chat-page-container">
+
+    <aside class="chat-sidebar">
+        <div class="sidebar-header">
+            <h2>Kaiwa Chat</h2>
+            <p>Welcome, <strong sec:authentication="name" id="currentUser">User</strong></p>
+        </div>
+
+
+        <div class="users-list">
+            <h3 color="white"><b>Channels</b></h3>
+            <ul id="roomsList">
+
+            </ul>
+            <form id="createRoomForm" style="margin-top:1rem;">
+                <input type="text" id="newRoomName" placeholder="➕ New channel..." required />
+            </form>
+        </div>
+
+
+        <div class="users-list">
+            <h3>Online Users</h3>
+            <ul id="onlineUsers">
+                <li>Abhinav Singh</li>
+                <li>Admin</li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <a th:href="@{/logout}" class="btn">Logout</a>
+        </div>
+    </aside>
+
+
+    <main class="chat-main">
+        <header class="chat-header">
+            <h3 id="room-title">#<span th:text="${roomId}">general</span></h3>
+        </header>
+
+        <div class="chat-messages" id="chatBox">
+
+        </div>
+
+        <form class="chat-input-form" id="messageForm">
+            <input type="text" id="message" placeholder="Type a message..." autocomplete="off" />
+            <button type="submit">Send</button>
+        </form>
+    </main>
 </div>
 
-<div id="chatBox" style="border:1px solid #ccc; width:400px; height:200px; overflow:auto; margin-top:10px;">
-    <p><i>Messages will appear here...</i></p>
-</div>
-
-<div style="margin-top:10px;">
-    <input type="text" id="message" placeholder="Type a message..." style="width:300px;">
-    <button onclick="sendMessage()">Send</button>
-</div>
-
-<script>
+<script th:inline="javascript">
     let stompClient = null;
-    let currentRoom = "General";
+    let currentRoom = /*[[${roomId}]]*/ "general";
+    const currentUsername = document.getElementById('currentUser').textContent;
 
     function connect() {
-        const socket = new SockJS('/ws'); // matches WebSocketConfig
+        const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-
-        currentRoom = document.getElementById("room").value;
 
         stompClient.connect({}, function (frame) {
             console.log("Connected: " + frame);
-
-            stompClient.subscribe("/topic/" + currentRoom, function (messageOutput) {
-                showMessage(JSON.parse(messageOutput.body).content);
-            });
-
-            showMessage("✅ Joined room: " + currentRoom);
+            subscribeToRoom(currentRoom);
         });
     }
 
-    function sendMessage() {
-        const msg = document.getElementById("message").value;
-        if (stompClient && currentRoom) {
-            stompClient.send("/app/chat/" + currentRoom, {}, JSON.stringify({'content': msg}));
-            document.getElementById("message").value = "";
+    function subscribeToRoom(room) {
+        if (stompClient) {
+            stompClient.subscribe("/topic/" + room, function (messageOutput) {
+                showMessage(JSON.parse(messageOutput.body));
+            });
+        }
+    }
+
+    function sendMessage(event) {
+        event.preventDefault();
+        const messageInput = document.getElementById("message");
+        const messageContent = messageInput.value.trim();
+
+        if (messageContent && stompClient) {
+            const chatMessage = {
+                sender: currentUsername,
+                content: messageContent
+            };
+            stompClient.send("/app/chat/" + currentRoom, {}, JSON.stringify(chatMessage));
+            messageInput.value = "";
         }
     }
 
     function showMessage(message) {
         const chatBox = document.getElementById("chatBox");
-        const p = document.createElement("p");
-        p.textContent = message;
-        chatBox.appendChild(p);
+
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+
+        if (message.sender === currentUsername) {
+            messageElement.classList.add("message-sent");
+        } else {
+            messageElement.classList.add("message-received");
+        }
+
+        const senderElement = document.createElement("div");
+        senderElement.classList.add("sender");
+        senderElement.textContent = (message.sender === currentUsername) ? "You" : message.sender;
+
+        const textElement = document.createElement("div");
+        textElement.classList.add("text");
+        textElement.textContent = message.content;
+
+        messageElement.appendChild(senderElement);
+        messageElement.appendChild(textElement);
+        chatBox.appendChild(messageElement);
+
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    async function loadRooms() {
+        try {
+            const response = await fetch("http://localhost:8083/api/rooms");
+            const rooms = await response.json();
+
+            const roomsList = document.getElementById("roomsList");
+            roomsList.innerHTML = "";
+
+            rooms.forEach(room => {
+                const li = document.createElement("li");
+                li.textContent = "#" + room.name;
+                li.onclick = () => window.location.href = "/chat/" + room.name;
+                if (room.name === currentRoom) li.classList.add("active");
+                roomsList.appendChild(li);
+            });
+        } catch (err) {
+            console.error("Error loading rooms", err);
+        }
+    }
+
+    async function createRoom(event) {
+        event.preventDefault();
+        const name = document.getElementById("newRoomName").value.trim();
+        if (!name) return;
+
+        try {
+            const response = await fetch("http://localhost:8083/api/rooms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+
+            if (response.ok) {
+                document.getElementById("newRoomName").value = "";
+                await loadRooms();
+                window.location.href = "/chat/" + name;
+            } else {
+                alert("Failed to create room");
+            }
+        } catch (err) {
+            console.error("Error creating room", err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        connect();
+        loadRooms();
+        document.getElementById("createRoomForm").addEventListener("submit", createRoom);
+    });
+
+    document.getElementById('messageForm').addEventListener('submit', sendMessage);
 </script>
 </body>
 </html>

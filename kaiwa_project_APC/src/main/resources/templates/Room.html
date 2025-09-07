@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Kaiwa Rooms</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<h2>Available Chat Rooms</h2>
+
+<!-- Room list -->
+<ul id="roomList"></ul>
+
+<!-- Create new room -->
+<h3>Create New Room</h3>
+<form id="createRoomForm">
+    <input type="text" id="roomName" placeholder="Room name" required>
+    <input type="text" id="roomDesc" placeholder="Description" required>
+    <button type="submit">Create Room</button>
+</form>
+
+<script>
+    const apiUrl = "http://localhost:8083/api/rooms";
+
+    // Fetch rooms and display
+
+
+    async function loadRooms() {
+        const res = await fetch(apiUrl);
+        const rooms = await res.json();
+        const roomList = document.getElementById("roomList");
+        roomList.innerHTML = "";
+        rooms.forEach(room => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="/chat/${room.name}">${room.name}</a> - ${room.description}`;
+            roomList.appendChild(li);
+        });
+    }
+
+    // Handle new room creation
+
+
+    document.getElementById("createRoomForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("roomName").value;
+        const description = document.getElementById("roomDesc").value;
+
+        await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, description })
+        });
+
+        document.getElementById("createRoomForm").reset();
+        loadRooms(); // refresh list
+    });
+
+    // Load rooms on page load
+
+
+    loadRooms();
+</script>
+</body>
+</html>

@@ -1,20 +1,28 @@
 <!DOCTYPE html>
-<html lang="English" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Home</title>
+    <title>Home - Kaiwa Chat</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
 <body>
-    <h2>Welcome to Kaiwa Chat</h2>
-    <div sec:authorize="isAuthenticated()">
-        <p>Hello, <span sec:authentication="name"></span>!</p>
-        <p> Hi Would you like to chat</p>
-        <a th:href="@{/chat}">Go to Chat Room</a> |
-        <a th:href="@{/logout}">Logout</a>
+<div class="container">
+    <div class="welcome-container">
+        <h2>Welcome to Kaiwa Chat</h2>
+
+        <div sec:authorize="isAuthenticated()">
+            <p>Hello, <strong sec:authentication="name">User</strong>!</p>
+            <p>Ready to start a conversation?</p>
+            <a th:href="@{/chat}" class="button">Go to Chat Room</a>
+            <a th:href="@{/logout}" class="button">Logout</a>
+        </div>
+
+        <div sec:authorize="!isAuthenticated()">
+            <p>The modern, real-time chat application.</p>
+            <a th:href="@{/login}" class="button">Login</a>
+            <a th:href="@{/register}" class="button">Register</a>
+        </div>
+
     </div>
-<!--    <div sec:authorize="!isAuthenticated()">-->
-<!--        <a th:href="@{/login}">Login</a> |-->
-<!--        <a th:href="@{/register}">Register</a>-->
-<!--    </div>-->
+</div>
 </body>
 </html>

@@ -1,27 +1,30 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Login</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
 <body>
-    <h2>Login</h2>
-    <form th:action="@{/login}" method="post">
-        <div>
-            <label>Username:</label>
-            <input type="text" name="username" required />
+<div class="container">
+    <div class="form-container">
+        <h2>Welcome Back!</h2> <form th:action="@{/login}" method="post">
+        <div class="input-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required />
+        </div>
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required />
+        </div>
+        <div class="checkbox-group"> <input type="checkbox" name="remember-me" id="remember-me" />
+            <label for="remember-me">Remember me</label>
         </div>
         <div>
-            <label>Password:</label>
-            <input type="password" name="password" required />
-        </div>
-        <div>
-            <input type="checkbox" name="remember-me" /> Remember me
-        </div>
-        <div>
-            <button type="submit">Login</button>
+            <button type="submit" class="btn">Login</button>
         </div>
     </form>
-    <p>Don't have an account? <a th:href="@{/register}">Register here</a></p>
+        <p class="form-footer">Don't have an account? <a th:href="@{/register}">Sign Up Here</a></p>
+    </div>
+</div>
 </body>
 </html>
