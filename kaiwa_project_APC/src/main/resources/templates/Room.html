@@ -8,10 +8,10 @@
 <body>
 <h2>Available Chat Rooms</h2>
 
-<!-- Room list -->
+
 <ul id="roomList"></ul>
 
-<!-- Create new room -->
+
 <h3>Create New Room</h3>
 <form id="createRoomForm">
     <input type="text" id="roomName" placeholder="Room name" required>
@@ -21,9 +21,6 @@
 
 <script>
     const apiUrl = "http://localhost:8083/api/rooms";
-
-    // Fetch rooms and display
-
 
     async function loadRooms() {
         const res = await fetch(apiUrl);
@@ -36,9 +33,6 @@
             roomList.appendChild(li);
         });
     }
-
-    // Handle new room creation
-
 
     document.getElementById("createRoomForm").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -54,9 +48,6 @@
         document.getElementById("createRoomForm").reset();
         loadRooms(); // refresh list
     });
-
-    // Load rooms on page load
-
 
     loadRooms();
 </script>
