@@ -21,7 +21,7 @@ public class AuthController {
     @PostMapping("/register")
     public String register(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            return "redirect:/register?error"; // username already exists
+            return "redirect:/register?error";
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(Set.of("ROLE_USER"));

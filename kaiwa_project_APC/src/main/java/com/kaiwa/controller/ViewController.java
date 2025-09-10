@@ -1,12 +1,20 @@
 package com.kaiwa.controller;
 
+import com.kaiwa.model.ChatRoom;
+import com.kaiwa.repository.ChatRoomRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Optional;
+
 @Controller
 public class ViewController {
+
+    @Autowired
+    private ChatRoomRepository chatRoomRepository;
 
     @GetMapping("/")
     public String index() {
@@ -30,8 +38,14 @@ public class ViewController {
 
     @GetMapping("/chat/{roomName}")
     public String chat(@PathVariable String roomName, Model model) {
-        model.addAttribute("roomId", roomName); // inject room name into chat.html
-        return "chat"; // renders templates/chat.html
+        // Should validate room exists and get actual room ID
+        Optional<ChatRoom> room = chatRoomRepository.findByName(roomName);
+        if (room.isPresent()) {
+            model.addAttribute("roomId", room.get().getId());
+            model.addAttribute("roomName", roomName);
+        }
+        return "chat";
     }
+
 
 }

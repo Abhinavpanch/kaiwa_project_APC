@@ -28,13 +28,7 @@
         </div>
 
 
-        <div class="users-list">
-            <h3>Online Users</h3>
-            <ul id="onlineUsers">
-                <li>Abhinav Singh</li>
-                <li>Admin</li>
-            </ul>
-        </div>
+
 
         <div class="sidebar-footer">
             <a th:href="@{/logout}" class="btn">Logout</a>
@@ -42,9 +36,10 @@
     </aside>
 
 
-    <main class="chat-main">
+    <main class="chat-main" >
         <header class="chat-header">
-            <h3 id="room-title">#<span th:text="${roomId}">general</span></h3>
+            <h3 id="room-title">#<span th:text="${roomName}">general</span></h3>
+
         </header>
 
         <div class="chat-messages" id="chatBox">
@@ -60,7 +55,9 @@
 
 <script th:inline="javascript">
     let stompClient = null;
+    let currentSubscription = null;
     let currentRoom = /*[[${roomId}]]*/ "general";
+    let currentRoomName = /*[[${roomName}]]*/ "general";
     const currentUsername = document.getElementById('currentUser').textContent;
 
     function connect() {
@@ -70,14 +67,41 @@
         stompClient.connect({}, function (frame) {
             console.log("Connected: " + frame);
             subscribeToRoom(currentRoom);
+            loadMessageHistory(currentRoom); // CRITICAL: Load existing messages
         });
     }
 
-    function subscribeToRoom(room) {
+    function subscribeToRoom(roomId) {
+        // Unsubscribe from previous room
+        if (currentSubscription) {
+            currentSubscription.unsubscribe();
+        }
+
         if (stompClient) {
-            stompClient.subscribe("/topic/" + room, function (messageOutput) {
+            currentSubscription = stompClient.subscribe("/topic/" + roomId, function (messageOutput) {
                 showMessage(JSON.parse(messageOutput.body));
             });
+        }
+    }
+
+    // NEW: Load message history when joining a room
+    async function loadMessageHistory(roomId) {
+        try {
+            const response = await fetch(`/api/messages/${roomId}`);
+            if (response.ok) {
+                const messages = await response.json();
+
+                // Clear existing messages
+                const chatBox = document.getElementById("chatBox");
+                chatBox.innerHTML = "";
+
+                // Display all historical messages
+                messages.forEach(message => {
+                    showMessage(message);
+                });
+            }
+        } catch (err) {
+            console.error("Error loading message history:", err);
         }
     }
 
@@ -96,36 +120,47 @@
         }
     }
 
-    function showMessage(message) {
-        const chatBox = document.getElementById("chatBox");
+     function showMessage(message) {
+    const chatBox = document.getElementById("chatBox");
 
-        const messageElement = document.createElement("div");
-        messageElement.classList.add("message");
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message");
 
-        if (message.sender === currentUsername) {
-            messageElement.classList.add("message-sent");
-        } else {
-            messageElement.classList.add("message-received");
-        }
-
-        const senderElement = document.createElement("div");
-        senderElement.classList.add("sender");
-        senderElement.textContent = (message.sender === currentUsername) ? "You" : message.sender;
-
-        const textElement = document.createElement("div");
-        textElement.classList.add("text");
-        textElement.textContent = message.content;
-
-        messageElement.appendChild(senderElement);
-        messageElement.appendChild(textElement);
-        chatBox.appendChild(messageElement);
-
-        chatBox.scrollTop = chatBox.scrollHeight;
+    if (message.sender === currentUsername) {
+        messageElement.classList.add("message-sent");
+    } else {
+        messageElement.classList.add("message-received");
     }
+
+    const senderElement = document.createElement("div");
+    senderElement.classList.add("sender");
+    senderElement.textContent = (message.sender === currentUsername) ? "You" : message.sender;
+
+    const textElement = document.createElement("div");
+    textElement.classList.add("text");
+    textElement.textContent = message.content;
+
+    const timeElement = document.createElement("div");
+    timeElement.classList.add("timestamp");
+
+    // Clean hours:seconds format (e.g., "14:23", "09:05")
+    const date = new Date(message.timestamp);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    timeElement.textContent = `${hours}:${seconds}`;
+
+    messageElement.appendChild(senderElement);
+    messageElement.appendChild(textElement);
+    messageElement.appendChild(timeElement);
+    chatBox.appendChild(messageElement);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
 
     async function loadRooms() {
         try {
-            const response = await fetch("http://localhost:8083/api/rooms");
+            const response = await fetch("/api/rooms"); // Fixed: Use relative URL
             const rooms = await response.json();
 
             const roomsList = document.getElementById("roomsList");
@@ -135,7 +170,7 @@
                 const li = document.createElement("li");
                 li.textContent = "#" + room.name;
                 li.onclick = () => window.location.href = "/chat/" + room.name;
-                if (room.name === currentRoom) li.classList.add("active");
+                if (room.name === currentRoomName) li.classList.add("active"); // Fixed: Use roomName
                 roomsList.appendChild(li);
             });
         } catch (err) {
@@ -149,7 +184,7 @@
         if (!name) return;
 
         try {
-            const response = await fetch("http://localhost:8083/api/rooms", {
+            const response = await fetch("/api/rooms", { // Fixed: Use relative URL
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name })
@@ -175,5 +210,6 @@
 
     document.getElementById('messageForm').addEventListener('submit', sendMessage);
 </script>
+
 </body>
 </html>
