@@ -60,27 +60,43 @@
     let currentRoomName = /*[[${roomName}]]*/ "general";
     const currentUsername = document.getElementById('currentUser').textContent;
 
+    // REPLACE THIS EXISTING FUNCTION:
     function connect() {
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-
-        stompClient.connect({}, function (frame) {
-            console.log("Connected: " + frame);
-            subscribeToRoom(currentRoom);
-            loadMessageHistory(currentRoom); // CRITICAL: Load existing messages
-        });
+        // Add error handling
+        stompClient.connect({},
+            function (frame) {
+                console.log("✅ Connected: " + frame);
+                subscribeToRoom(currentRoom);
+                loadMessageHistory(currentRoom);
+            },
+            function (error) {
+                console.error("❌ WebSocket connection failed:", error);
+                // Attempt reconnection
+                setTimeout(() => {
+                    console.log("🔄 Attempting to reconnect...");
+                    connect();
+                }, 3000);
+            }
+        );
     }
 
+    // Also update this function:
     function subscribeToRoom(roomId) {
-        // Unsubscribe from previous room
         if (currentSubscription) {
             currentSubscription.unsubscribe();
+            console.log("🔌 Unsubscribed from previous room");
         }
 
-        if (stompClient) {
+        if (stompClient && stompClient.connected) {
             currentSubscription = stompClient.subscribe("/topic/" + roomId, function (messageOutput) {
+                console.log("📨 New message received:", messageOutput.body);
                 showMessage(JSON.parse(messageOutput.body));
             });
+            console.log("🔔 Subscribed to /topic/" + roomId);
+        } else {
+            console.error("❌ Cannot subscribe: WebSocket not connected");
         }
     }
 

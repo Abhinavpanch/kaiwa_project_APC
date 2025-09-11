@@ -32,9 +32,22 @@ public class ChatController {
 
     @MessageMapping("/chat/{roomId}")
     public void send(@DestinationVariable String roomId, ChatMessage payload) {
-        payload.setTimestamp(Instant.now());
-        payload.setRoomId(roomId);
-        messageRepository.save(payload);
-        messagingTemplate.convertAndSend("/topic/" + roomId, payload);
+        try {
+            payload.setTimestamp(Instant.now());
+            payload.setRoomId(roomId);
+
+            // Save to database first
+            ChatMessage savedMessage = messageRepository.save(payload);
+            System.out.println("💾 Message saved: " + savedMessage.getContent());
+
+            // Then broadcast to all subscribers
+            messagingTemplate.convertAndSend("/topic/" + roomId, savedMessage);
+            System.out.println("📡 Message broadcasted to /topic/" + roomId);
+
+        } catch (Exception e) {
+            System.err.println("❌ Error sending message: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+
 }

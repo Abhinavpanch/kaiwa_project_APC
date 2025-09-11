@@ -16,7 +16,7 @@ public class ViewController {
     @Autowired
     private ChatRoomRepository chatRoomRepository;
 
-    @GetMapping("/")
+    @GetMapping("/view")
     public String index() {
         return "index"; // will render templates/index.html
     }
