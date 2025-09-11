@@ -157,13 +157,13 @@
     textElement.textContent = message.content;
 
     const timeElement = document.createElement("div");
-    timeElement.classList.add("timestamp");
+timeElement.classList.add("timestamp");
 
-    // Clean hours:seconds format (e.g., "14:23", "09:05")
-    const date = new Date(message.timestamp);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
-    timeElement.textContent = `${hours}:${seconds}`;
+const date = new Date(message.timestamp);
+const hours = date.getHours().toString().padStart(2, '0');
+const minutes = date.getMinutes().toString().padStart(2, '0');  // Changed to MINUTES
+timeElement.textContent = `${hours}:${minutes}`;
+
 
     messageElement.appendChild(senderElement);
     messageElement.appendChild(textElement);

@@ -15,16 +15,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/css/**", "/js/**",
-                                "/ws/**", "/api/**", "/topic/**", "/app/**").permitAll() // Add WebSocket paths
+                        .requestMatchers("/register", "/css/**", "/js/**", "/ws/**", "/api/**").permitAll()
                         .anyRequest().authenticated()
+                )
+                .headers(headers -> headers
+                        .frameOptions().sameOrigin()
+                        .and()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
-                .headers(headers -> headers.frameOptions().sameOrigin()) // Allow WebSocket frames
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
@@ -33,6 +35,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
 
     @Bean

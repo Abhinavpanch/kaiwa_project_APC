@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.Instant;
 import java.util.List;
-
 @Controller
 public class ChatController {
 
@@ -28,26 +27,27 @@ public class ChatController {
         return "chat";
     }
 
-
-
     @MessageMapping("/chat/{roomId}")
     public void send(@DestinationVariable String roomId, ChatMessage payload) {
         try {
+            System.out.println("📨 Received message for room: " + roomId);
+            System.out.println("📨 Message content: " + payload.getContent());
+            System.out.println("📨 Sender: " + payload.getSender());
+
             payload.setTimestamp(Instant.now());
             payload.setRoomId(roomId);
 
-            // Save to database first
+            // Save to database
             ChatMessage savedMessage = messageRepository.save(payload);
-            System.out.println("💾 Message saved: " + savedMessage.getContent());
+            System.out.println("💾 Message saved with ID: " + savedMessage.getId());
 
-            // Then broadcast to all subscribers
+            // Broadcast to all subscribers
             messagingTemplate.convertAndSend("/topic/" + roomId, savedMessage);
             System.out.println("📡 Message broadcasted to /topic/" + roomId);
 
         } catch (Exception e) {
-            System.err.println("❌ Error sending message: " + e.getMessage());
+            System.err.println("❌ Error in ChatController.send(): " + e.getMessage());
             e.printStackTrace();
         }
     }
-
 }
