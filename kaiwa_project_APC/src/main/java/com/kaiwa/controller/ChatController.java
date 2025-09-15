@@ -37,11 +37,11 @@ public class ChatController {
             payload.setTimestamp(Instant.now());
             payload.setRoomId(roomId);
 
-            // Save to database
+
             ChatMessage savedMessage = messageRepository.save(payload);
             System.out.println("💾 Message saved with ID: " + savedMessage.getId());
 
-            // Broadcast to all subscribers
+
             messagingTemplate.convertAndSend("/topic/" + roomId, savedMessage);
             System.out.println("📡 Message broadcasted to /topic/" + roomId);
 

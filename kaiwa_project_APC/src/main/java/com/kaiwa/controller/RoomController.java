@@ -21,13 +21,11 @@ public class RoomController {
         return chatRoomRepository.findAll();
     }
 
-//    list() {
-//        return chatRoomRepository.findAll();
-//    }
+
 
     @PostMapping
     public ResponseEntity<ChatRoom> create(@RequestBody ChatRoom room) {
-//        return ResponseEntity.ok(chatRoomRepository.save(room));
+
         ChatRoom savedRoom = chatRoomRepository.save(room);
         return ResponseEntity.ok(savedRoom);
     }

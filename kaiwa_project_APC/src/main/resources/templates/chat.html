@@ -60,7 +60,7 @@
     let currentRoomName = /*[[${roomName}]]*/ "general";
     const currentUsername = document.getElementById('currentUser').textContent;
 
-    // REPLACE THIS EXISTING FUNCTION:
+
     function connect() {
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
@@ -82,7 +82,7 @@
         );
     }
 
-    // Also update this function:
+
     function subscribeToRoom(roomId) {
         if (currentSubscription) {
             currentSubscription.unsubscribe();
@@ -100,18 +100,18 @@
         }
     }
 
-    // NEW: Load message history when joining a room
+
     async function loadMessageHistory(roomId) {
         try {
             const response = await fetch(`/api/messages/${roomId}`);
             if (response.ok) {
                 const messages = await response.json();
 
-                // Clear existing messages
+
                 const chatBox = document.getElementById("chatBox");
                 chatBox.innerHTML = "";
 
-                // Display all historical messages
+
                 messages.forEach(message => {
                     showMessage(message);
                 });
@@ -161,7 +161,7 @@ timeElement.classList.add("timestamp");
 
 const date = new Date(message.timestamp);
 const hours = date.getHours().toString().padStart(2, '0');
-const minutes = date.getMinutes().toString().padStart(2, '0');  // Changed to MINUTES
+const minutes = date.getMinutes().toString().padStart(2, '0');
 timeElement.textContent = `${hours}:${minutes}`;
 
 
@@ -176,7 +176,7 @@ timeElement.textContent = `${hours}:${minutes}`;
 
     async function loadRooms() {
         try {
-            const response = await fetch("/api/rooms"); // Fixed: Use relative URL
+            const response = await fetch("/api/rooms");
             const rooms = await response.json();
 
             const roomsList = document.getElementById("roomsList");
@@ -186,7 +186,7 @@ timeElement.textContent = `${hours}:${minutes}`;
                 const li = document.createElement("li");
                 li.textContent = "#" + room.name;
                 li.onclick = () => window.location.href = "/chat/" + room.name;
-                if (room.name === currentRoomName) li.classList.add("active"); // Fixed: Use roomName
+                if (room.name === currentRoomName) li.classList.add("active");
                 roomsList.appendChild(li);
             });
         } catch (err) {
@@ -200,7 +200,7 @@ timeElement.textContent = `${hours}:${minutes}`;
         if (!name) return;
 
         try {
-            const response = await fetch("/api/rooms", { // Fixed: Use relative URL
+            const response = await fetch("/api/rooms", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name })
