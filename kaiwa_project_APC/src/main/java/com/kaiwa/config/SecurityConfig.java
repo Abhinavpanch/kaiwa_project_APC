@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 
 @Configuration
 public class SecurityConfig {
@@ -19,8 +20,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers
-                        .frameOptions().sameOrigin()
-                        .and()
+                        // Use the modern way to set frame options
+                        .frameOptions(frameOptions -> frameOptions
+                                .sameOrigin()
+                        )
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -35,8 +38,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

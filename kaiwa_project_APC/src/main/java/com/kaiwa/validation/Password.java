@@ -5,13 +5,11 @@ import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = WordCountValidator.class)
+@Constraint(validatedBy = PasswordValidator.class)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface WordCount {
-    String message() default "word count must be between {min} and {max}";
-    int min() default 4;
-    int max() default 15;
+public @interface Password {
+    String message() default "Invalid password: password must be 4-15 characters long and contain at least one letter, one number, and one special character.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

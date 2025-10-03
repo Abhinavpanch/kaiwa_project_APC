@@ -1,5 +1,6 @@
 package com.kaiwa.model;
 
+import com.kaiwa.validation.Password;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class User {
     @Indexed(unique = true)
     private String username;
 
+    @Password
     private String password;
 
     private Set<String> roles;
