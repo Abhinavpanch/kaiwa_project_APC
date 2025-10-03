@@ -1,3 +1,5 @@
+package com.kaiwa.service;
+
 import com.kaiwa.model.ChatMessage;
 import com.kaiwa.repository.ChatMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
