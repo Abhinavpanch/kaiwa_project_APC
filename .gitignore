@@ -1,2 +1,3 @@
 # Project exclude paths
 /kaiwa_project_APC/target/
+.env
