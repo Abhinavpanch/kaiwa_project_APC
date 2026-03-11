@@ -1,40 +1,29 @@
 package com.kaiwa.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import jakarta.validation.constraints.NotBlank;
+import com.kaiwa.validation.WordCount;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "messages")
 public class ChatMessage {
     @Id
     private String id;
     private String roomId;
+
+    @NotBlank(message = "sender must not be blank")
     private String sender;
+
+    @NotBlank(message = "content must not be blank")
     private String content;
+
     private Instant timestamp;
-
-    public ChatMessage() {}
-
-    public ChatMessage(String roomId, String sender, String content, Instant timestamp) {
-        this.roomId = roomId;
-        this.sender = sender;
-        this.content = content;
-        this.timestamp = timestamp;
-    }
-
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public String getRoomId() { return roomId; }
-    public void setRoomId(String roomId) { this.roomId = roomId; }
-
-    public String getSender() { return sender; }
-    public void setSender(String sender) { this.sender = sender; }
-
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-
-    public Instant getTimestamp() { return timestamp; }
-    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
 }

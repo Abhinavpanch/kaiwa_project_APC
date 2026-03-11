@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 
 @Configuration
 public class SecurityConfig {
@@ -13,25 +14,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF if using WebSocket or use proper
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/register", "/css/**", "/js/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/home", true)
-                .permitAll()
-            )
-            .rememberMe(remember -> remember
-                .key("uniqueAndSecret")
-                .tokenValiditySeconds(7 * 24 * 60 * 60)                                    // 7 days tak
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/register", "/css/**", "/js/**", "/ws/**", "/api/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .headers(headers -> headers
+                        // Use the modern way to set frame options
+                        .frameOptions(frameOptions -> frameOptions
+                                .sameOrigin()
+                        )
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/home", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                );
 
         return http.build();
     }

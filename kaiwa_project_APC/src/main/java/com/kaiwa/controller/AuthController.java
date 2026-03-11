@@ -2,6 +2,7 @@ package com.kaiwa.controller;
 
 import com.kaiwa.model.User;
 import com.kaiwa.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -19,9 +20,9 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public String register(User user) {
+    public String register(@Valid User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            return "redirect:/register?error"; // username already exists
+            return "redirect:/register?error";
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(Set.of("ROLE_USER"));

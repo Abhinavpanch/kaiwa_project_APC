@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;   // <-- move import here
 
 import java.util.List;
 
@@ -21,13 +22,8 @@ public class RoomController {
         return chatRoomRepository.findAll();
     }
 
-//    list() {
-//        return chatRoomRepository.findAll();
-//    }
-
     @PostMapping
-    public ResponseEntity<ChatRoom> create(@RequestBody ChatRoom room) {
-//        return ResponseEntity.ok(chatRoomRepository.save(room));
+    public ResponseEntity<ChatRoom> create(@Valid @RequestBody ChatRoom room) {
         ChatRoom savedRoom = chatRoomRepository.save(room);
         return ResponseEntity.ok(savedRoom);
     }

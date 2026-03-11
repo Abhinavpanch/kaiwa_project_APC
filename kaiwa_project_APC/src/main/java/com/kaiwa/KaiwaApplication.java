@@ -13,14 +13,4 @@ public class KaiwaApplication {
         SpringApplication.run(KaiwaApplication.class, args);
     }
 
-    @Bean
-    CommandLineRunner initRooms(ChatRoomRepository chatRoomRepository) {
-        return args -> {
-            if (chatRoomRepository.count() == 0) {
-                chatRoomRepository.save(new ChatRoom("general", "Default room for everyone"));
-                chatRoomRepository.save(new ChatRoom("sports", "Talk about sports"));
-                chatRoomRepository.save(new ChatRoom("movies", "Discuss your favorite films"));
-            }
-        };
-    }
 }

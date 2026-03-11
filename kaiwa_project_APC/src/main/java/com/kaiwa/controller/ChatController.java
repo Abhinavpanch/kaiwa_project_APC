@@ -8,9 +8,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.Instant;
-
+import java.util.List;
 @Controller
 public class ChatController {
 
@@ -22,14 +24,28 @@ public class ChatController {
 
     @GetMapping("/chat")
     public String chatPage(){
-        return "chat";             //templates/chat.html
+        return "chat";
     }
 
     @MessageMapping("/chat/{roomId}")
     public void send(@DestinationVariable String roomId, ChatMessage payload) {
-        payload.setTimestamp(Instant.now());
-        payload.setRoomId(roomId);
-        messageRepository.save(payload);
-        messagingTemplate.convertAndSend("/topic/" + roomId, payload);
+        try {
+            System.out.println("📨 Received message for room: " + roomId);
+            System.out.println("📨 Message content: " + payload.getContent());
+            System.out.println("📨 Sender: " + payload.getSender());
+
+            payload.setTimestamp(Instant.now());
+            payload.setRoomId(roomId);
+
+            ChatMessage savedMessage = messageRepository.save(payload);
+            System.out.println("💾 Message saved with ID: " + savedMessage.getId());
+
+            messagingTemplate.convertAndSend("/topic/" + roomId, savedMessage);
+            System.out.println("📡 Message broadcasted to /topic/" + roomId);
+
+        } catch (Exception e) {
+            System.err.println("❌ Error in ChatController.send(): " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

@@ -18,7 +18,7 @@
 
 
         <div class="users-list">
-            <h3 color="red"><b>Channels</b></h3>
+            <h3 color="white"><b>Channels</b></h3>
             <ul id="roomsList">
 
             </ul>
@@ -28,15 +28,7 @@
         </div>
 
 
-        <div class="users-list">
-            <h3>Online Users</h3>
-            <ul id="onlineUsers">
-                <li>Abhinav Singh</li>
-                <li>Admin</li>
-                <li>Annanya Chauhan</li>
-                <li>Ansh</li>
-            </ul>
-        </div>
+
 
         <div class="sidebar-footer">
             <a th:href="@{/logout}" class="btn">Logout</a>
@@ -44,9 +36,10 @@
     </aside>
 
 
-    <main class="chat-main">
+    <main class="chat-main" >
         <header class="chat-header">
-            <h3 id="room-title">#<span th:text="${roomId}">general</span></h3>
+            <h3 id="room-title">#<span th:text="${roomName}">general</span></h3>
+
         </header>
 
         <div class="chat-messages" id="chatBox">
@@ -62,24 +55,69 @@
 
 <script th:inline="javascript">
     let stompClient = null;
+    let currentSubscription = null;
     let currentRoom = /*[[${roomId}]]*/ "general";
+    let currentRoomName = /*[[${roomName}]]*/ "general";
     const currentUsername = document.getElementById('currentUser').textContent;
+
 
     function connect() {
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-
-        stompClient.connect({}, function (frame) {
-            console.log("Connected: " + frame);
-            subscribeToRoom(currentRoom);
-        });
+        // Add error handling
+        stompClient.connect({},
+            function (frame) {
+                console.log("✅ Connected: " + frame);
+                subscribeToRoom(currentRoom);
+                loadMessageHistory(currentRoom);
+            },
+            function (error) {
+                console.error("❌ WebSocket connection failed:", error);
+                // Attempt reconnection
+                setTimeout(() => {
+                    console.log("🔄 Attempting to reconnect...");
+                    connect();
+                }, 3000);
+            }
+        );
     }
 
-    function subscribeToRoom(room) {
-        if (stompClient) {
-            stompClient.subscribe("/topic/" + room, function (messageOutput) {
+
+    function subscribeToRoom(roomId) {
+        if (currentSubscription) {
+            currentSubscription.unsubscribe();
+            console.log("🔌 Unsubscribed from previous room");
+        }
+
+        if (stompClient && stompClient.connected) {
+            currentSubscription = stompClient.subscribe("/topic/" + roomId, function (messageOutput) {
+                console.log("📨 New message received:", messageOutput.body);
                 showMessage(JSON.parse(messageOutput.body));
             });
+            console.log("🔔 Subscribed to /topic/" + roomId);
+        } else {
+            console.error("❌ Cannot subscribe: WebSocket not connected");
+        }
+    }
+
+
+    async function loadMessageHistory(roomId) {
+        try {
+            const response = await fetch(`/api/messages/${roomId}`);
+            if (response.ok) {
+                const messages = await response.json();
+
+
+                const chatBox = document.getElementById("chatBox");
+                chatBox.innerHTML = "";
+
+
+                messages.forEach(message => {
+                    showMessage(message);
+                });
+            }
+        } catch (err) {
+            console.error("Error loading message history:", err);
         }
     }
 
@@ -98,36 +136,47 @@
         }
     }
 
-    function showMessage(message) {
-        const chatBox = document.getElementById("chatBox");
+     function showMessage(message) {
+    const chatBox = document.getElementById("chatBox");
 
-        const messageElement = document.createElement("div");
-        messageElement.classList.add("message");
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message");
 
-        if (message.sender === currentUsername) {
-            messageElement.classList.add("message-sent");
-        } else {
-            messageElement.classList.add("message-received");
-        }
-
-        const senderElement = document.createElement("div");
-        senderElement.classList.add("sender");
-        senderElement.textContent = (message.sender === currentUsername) ? "You" : message.sender;
-
-        const textElement = document.createElement("div");
-        textElement.classList.add("text");
-        textElement.textContent = message.content;
-
-        messageElement.appendChild(senderElement);
-        messageElement.appendChild(textElement);
-        chatBox.appendChild(messageElement);
-
-        chatBox.scrollTop = chatBox.scrollHeight;
+    if (message.sender === currentUsername) {
+        messageElement.classList.add("message-sent");
+    } else {
+        messageElement.classList.add("message-received");
     }
+
+    const senderElement = document.createElement("div");
+    senderElement.classList.add("sender");
+    senderElement.textContent = (message.sender === currentUsername) ? "You" : message.sender;
+
+    const textElement = document.createElement("div");
+    textElement.classList.add("text");
+    textElement.textContent = message.content;
+
+    const timeElement = document.createElement("div");
+timeElement.classList.add("timestamp");
+
+const date = new Date(message.timestamp);
+const hours = date.getHours().toString().padStart(2, '0');
+const minutes = date.getMinutes().toString().padStart(2, '0');
+timeElement.textContent = `${hours}:${minutes}`;
+
+
+    messageElement.appendChild(senderElement);
+    messageElement.appendChild(textElement);
+    messageElement.appendChild(timeElement);
+    chatBox.appendChild(messageElement);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
 
     async function loadRooms() {
         try {
-            const response = await fetch("http://localhost:8083/api/rooms");
+            const response = await fetch("/api/rooms");
             const rooms = await response.json();
 
             const roomsList = document.getElementById("roomsList");
@@ -137,7 +186,7 @@
                 const li = document.createElement("li");
                 li.textContent = "#" + room.name;
                 li.onclick = () => window.location.href = "/chat/" + room.name;
-                if (room.name === currentRoom) li.classList.add("active");
+                if (room.name === currentRoomName) li.classList.add("active");
                 roomsList.appendChild(li);
             });
         } catch (err) {
@@ -151,7 +200,7 @@
         if (!name) return;
 
         try {
-            const response = await fetch("http://localhost:8083/api/rooms", {
+            const response = await fetch("/api/rooms", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name })
@@ -177,5 +226,6 @@
 
     document.getElementById('messageForm').addEventListener('submit', sendMessage);
 </script>
+
 </body>
 </html>
