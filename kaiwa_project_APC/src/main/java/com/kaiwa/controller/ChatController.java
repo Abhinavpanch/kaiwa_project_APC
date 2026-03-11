@@ -37,10 +37,8 @@ public class ChatController {
             payload.setTimestamp(Instant.now());
             payload.setRoomId(roomId);
 
-
             ChatMessage savedMessage = messageRepository.save(payload);
             System.out.println("💾 Message saved with ID: " + savedMessage.getId());
-
 
             messagingTemplate.convertAndSend("/topic/" + roomId, savedMessage);
             System.out.println("📡 Message broadcasted to /topic/" + roomId);
